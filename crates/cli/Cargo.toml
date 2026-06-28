@@ -1,0 +1,22 @@
+[package]
+name = "cling-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "cling-cli"
+path = "src/main.rs"
+
+[dependencies]
+cling-common = { workspace = true }
+cling-dbus-iface = { workspace = true }
+zbus = { workspace = true }
+zvariant = { workspace = true }
+serde = { workspace = true }
+serde_json = "1"
+clap = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
