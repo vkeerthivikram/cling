@@ -1,0 +1,16 @@
+[Unit]
+Description=cling clipboard manager daemon
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/cling-daemon
+# Restart on crash; the clipboard daemon should be persistent.
+Restart=on-failure
+RestartSec=2
+# Read CLING_PASSPHRASE from the systemd user environment (or keyring in future).
+# Pass it via `systemctl --user import-environment CLING_PASSPHRASE` if encrypted.
+
+[Install]
+WantedBy=graphical-session.target

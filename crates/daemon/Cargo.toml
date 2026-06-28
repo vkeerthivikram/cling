@@ -1,0 +1,32 @@
+[package]
+name = "cling-daemon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "cling-daemon"
+path = "src/main.rs"
+
+[dependencies]
+cling-common = { workspace = true }
+cling-core = { workspace = true }
+cling-store = { workspace = true }
+cling-backends = { workspace = true }
+cling-dbus-iface = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+directories = { workspace = true }
+clap = { workspace = true }
+zvariant = { workspace = true }
+zbus = { workspace = true }
+
+[features]
+default = []
+# Enable the X11 backend (requires libxcb). On by default in real builds; off
+# here so the testable core compiles without the (display-required) backend.
+x11 = ["cling-backends/x11"]

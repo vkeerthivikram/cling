@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=cling clipboard manager
+Comment=Clipboard history manager (X11/Wayland)
+Exec=cling-daemon
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+NotShowIn=GNOME;   # GNOME starts cling via systemd/extension; set to taste
