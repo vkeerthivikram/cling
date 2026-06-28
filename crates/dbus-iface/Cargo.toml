@@ -1,0 +1,22 @@
+[package]
+name = "cling-dbus-iface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+cling-common = { workspace = true }
+cling-core = { workspace = true }
+zbus = { workspace = true }
+zvariant = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+anyhow = { workspace = true }
+regex = { workspace = true }
+tokio = { workspace = true }
+
+[lib]
+path = "src/lib.rs"
