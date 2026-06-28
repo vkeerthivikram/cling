@@ -87,6 +87,13 @@ impl ClipboardManagerService {
         self
     }
 
+    /// Set the initial lock state (used when the daemon starts with an
+    /// encrypted-but-unopened store).
+    pub async fn with_initial_locked(self, locked: bool) -> Self {
+        self.state.lock().await.locked = locked;
+        self
+    }
+
     async fn ensure_unlocked(&self, state: &ServiceState) -> fdo::Result<()> {
         if state.locked {
             return Err(fdo::Error::Failed(
