@@ -1,0 +1,15 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# cling runtime data (used by tests/dev runs)
+*.clingdb
+*.clingdb-*
+cling-test-*
+.cling/
+
+# editor
+*.swp
+.idea/
+.vscode/

@@ -1,0 +1,66 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/common",
+    "crates/store",
+    "crates/core",
+    "crates/backends",
+    "crates/dbus-iface",
+    "crates/daemon",
+    "crates/cli",
+    "crates/show",
+]
+# `show` requires system GTK4/libadwaita (not available in all build envs).
+# It is excluded from default builds; build it explicitly with
+# `cargo build -p cling-show` once `libgtk-4-dev libadwaita-1-dev` are installed.
+default-members = [
+    "crates/common",
+    "crates/store",
+    "crates/core",
+    "crates/backends",
+    "crates/dbus-iface",
+    "crates/daemon",
+    "crates/cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "GPL-3.0-or-later"
+authors = ["cling contributors"]
+repository = "https://example.invalid/cling"
+homepage = "https://example.invalid/cling"
+
+[workspace.dependencies]
+cling-common = { path = "crates/common" }
+cling-store = { path = "crates/store" }
+cling-core = { path = "crates/core" }
+cling-backends = { path = "crates/backends" }
+cling-dbus-iface = { path = "crates/dbus-iface" }
+
+# External
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher-vendored-openssl"] }
+zbus = { version = "4", default-features = false, features = ["tokio"] }
+zvariant = { version = "4", features = ["serde_bytes", "option-as-array"] }
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+async-trait = "0.1"
+futures = "0.3"
+x11rb = "0.13"
+clap = { version = "4", features = ["derive"] }
+directories = "5"
+time = { version = "0.3", features = ["serde", "formatting", "macros"] }
+uuid = { version = "1", features = ["v4"] }
+regex = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
