@@ -1,16 +1,17 @@
 # cling — build & test commands
 
 ## Build
-- `cargo build --workspace --exclude cling-show` — default members (no GTK4 needed; SQLCipher/OpenSSL bundled).
+- `cargo build --workspace` — all members (needs `libgtk-4-dev libadwaita-1-dev` for `cling-show`; SQLCipher/OpenSSL bundled).
+- `cargo build --workspace --exclude cling-show` — everything except the GTK4 UI (no GTK4 needed).
 - `cargo build -p cling-backends --features x11` — X11 backend.
 - `cargo build -p cling-daemon --features x11` — daemon with X11 backend.
 - `cargo build -p cling-show` — GTK4 popup (needs `libgtk-4-dev libadwaita-1-dev`).
 
 ## Test
-- `cargo test --workspace --exclude cling-show` — full test suite.
+- `cargo test --workspace` — full test suite.
 
 ## Lint / typecheck
-- `cargo clippy --workspace --exclude cling-show -- -D warnings`
+- `cargo clippy --workspace -- -D warnings`
 - `cargo fmt --all -- --check`
 
 ## Run

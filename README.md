@@ -43,6 +43,9 @@ cargo build -p cling-daemon --features x11
 # GTK4 popup UI (needs libgtk-4-dev + libadwaita-1-dev):
 sudo apt install libgtk-4-dev libadwaita-1-dev
 cargo build -p cling-show
+
+# Everything (with GTK4 installed):
+cargo build --workspace
 ```
 
 ## Test
@@ -87,11 +90,30 @@ clipboard + Wayland-protocol access.
 
 ## Status
 
-Phases P0–P3 + P6 + P7 scaffolding are implemented. Remaining: the Wayland
-data-control backends (P2 runtime), GTK4 UI runtime polish (P3), the secure
-GUI unlock dialog wiring (P4), and drag-drop / multi-paste in the UI (P5). The
-X11 backend compiles against `x11rb` and needs an X server/Xephyr for
-integration testing.
+Phases P0–P7 scaffolding are implemented, including the **secure GUI unlock
+dialog** (P4) and **drag-drop-from-UI + multi-select bulk paste** (P5).
+
+Implemented:
+- Full-fidelity encrypted store (SQLCipher + FTS5), capture manager + policy.
+- `ClipboardProvider` trait; **X11 backend** (XFIXES capture, selection
+  ownership, XTEST auto-paste) and a **mock** backend + harness.
+- D-Bus service `org.cling.ClipboardManager` (UI/CLI/extension contract).
+- **GTK4/libadwaita popup** (`cling-show`): quick-pick, search, pin/delete,
+  drag-out, multi-select bulk paste, and a `--socket` unlock dialog.
+- **Secure unlock**: the passphrase is collected by `cling-show --socket` over
+  a private same-UID Unix socket and re-opens the store in-process — it never
+  crosses the D-Bus session bus.
+- **GNOME Shell extension** bridging GNOME-Wayland clipboard to the daemon.
+- **CLI**, packaging (systemd unit, autostart `.desktop`, CI).
+
+Remaining runtime work:
+- **Wayland data-control backends** (wlroots/KDE) — scaffolded; needs the
+  `wayland-client` registry/data-control wiring.
+- **Integration testing** of the X11 backend (needs an X server/Xephyr) and the
+  GNOME extension (needs each supported shell version).
+
+Wayland auto-paste and wlroots/KDE exclude-by-app are protocol-level
+limitations, not bugs.
 
 ## License
 
