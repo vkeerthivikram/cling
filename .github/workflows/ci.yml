@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          # xcb is needed for the X11 backend; GTK4/libadwaita only for cling-show
+          # (excluded from the default build). SQLCipher/OpenSSL are bundled.
+          sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build (default members)
+        run: cargo build --workspace --exclude cling-show
+
+      - name: Build (X11 backend)
+        run: cargo build -p cling-backends --features x11
+
+      - name: Test
+        run: cargo test --workspace --exclude cling-show
+
+      - name: Clippy
+        run: cargo clippy --workspace --exclude cling-show -- -D warnings
+        continue-on-error: true
+
+  build-gtk-ui:
+    # Optional job: compiles cling-show once GTK4/libadwaita are present.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GTK4 + libadwaita
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev pkg-config
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build cling-show
+        run: cargo build -p cling-show
