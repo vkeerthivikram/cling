@@ -1,0 +1,14 @@
+{
+  "uuid": "cling@cling",
+  "name": "Cling Clipboard Bridge",
+  "description": "Bridges GNOME's clipboard to the cling clipboard manager (org.cling.ClipboardManager). Provides GNOME-Wayland history parity until Mutter ships ext-data-control.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48"
+  ],
+  "version": 1,
+  "url": "https://example.invalid/cling",
+  "session-modes": ["unlock-dialog", "user"]
+}
