@@ -16,6 +16,5 @@ cling-dbus-iface = { workspace = true }
 gtk4 = "0.9"
 libadwaita = { version = "0.7", features = ["v1_5"] }
 zbus = { workspace = true }
-tokio = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }

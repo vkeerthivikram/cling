@@ -438,7 +438,6 @@ dependencies = [
  "cling-dbus-iface",
  "gtk4",
  "libadwaita",
- "tokio",
  "zbus",
 ]
 
