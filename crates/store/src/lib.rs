@@ -14,7 +14,10 @@ use cling_core::{HistoryStore, StoreError};
 use rusqlite::{params, Connection, OptionalExtension};
 use tokio::sync::Mutex;
 
+pub mod handle;
 pub mod schema;
+
+pub use handle::StoreHandle;
 
 /// Configuration for opening a store.
 #[derive(Debug, Clone)]
