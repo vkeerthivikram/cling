@@ -24,6 +24,7 @@ directories = { workspace = true }
 clap = { workspace = true }
 zvariant = { workspace = true }
 zbus = { workspace = true }
+async-trait = { workspace = true }
 
 [features]
 default = []

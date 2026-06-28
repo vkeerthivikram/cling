@@ -24,4 +24,8 @@ pub struct DaemonOpts {
     /// Assume an X11 display is present even if `DISPLAY` is unset.
     #[arg(long, default_value_t = false)]
     pub x11: bool,
+
+    /// Path/name of the `cling-show` binary used for the unlock dialog.
+    #[arg(long, default_value = "cling-show")]
+    pub show_binary: String,
 }

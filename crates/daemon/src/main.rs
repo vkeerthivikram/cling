@@ -7,8 +7,10 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use cling_core::{ClipboardManager, ClipboardProvider, HistoryStore};
 use cling_dbus_iface::{ClipboardManagerService, NoUnlock, UnlockRequest};
+use cling_store::StoreHandle;
 
 mod opts;
+mod unlock;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -35,8 +37,8 @@ async fn main() -> Result<()> {
 
     tracing::info!(?opts, "starting cling-daemon");
 
-    // 1. History store.
-    let store: Arc<dyn HistoryStore> = open_store(&opts)?;
+    // 1. History store (re-openable handle; may start locked if encrypted).
+    let (handle, started_locked) = open_store(&opts)?;
 
     // 2. Backend (auto-detected).
     let provider: Arc<dyn ClipboardProvider> = select_backend(&opts).await?;
@@ -45,15 +47,29 @@ async fn main() -> Result<()> {
     let manager = ClipboardManager::new();
     let manager_loop = manager.clone();
     let provider_for_loop = provider.clone();
-    let store_for_loop = store.clone();
+    let store_for_loop: Arc<dyn HistoryStore> = Arc::new(handle.clone());
     tokio::spawn(async move {
         manager_loop.run(provider_for_loop, store_for_loop).await;
     });
 
     // 4. D-Bus service.
-    let unlock: Arc<dyn UnlockRequest> = Arc::new(NoUnlock);
+    let unlock: Arc<dyn UnlockRequest> = if started_locked {
+        Arc::new(unlock::GuiUnlock::new(
+            handle.clone(),
+            opts.show_binary.clone(),
+        ))
+    } else {
+        Arc::new(NoUnlock)
+    };
     let auto_paste = make_auto_paste(&provider);
-    serve_dbus(store.clone(), provider.clone(), unlock, auto_paste).await?;
+    serve_dbus(
+        Arc::new(handle) as Arc<dyn HistoryStore>,
+        provider.clone(),
+        unlock,
+        auto_paste,
+        started_locked,
+    )
+    .await?;
 
     Ok(())
 }
@@ -70,15 +86,32 @@ fn make_auto_paste(_provider: &Arc<dyn ClipboardProvider>) -> Option<Arc<dyn Fn(
     None
 }
 
-fn open_store(opts: &opts::DaemonOpts) -> Result<Arc<dyn HistoryStore>> {
+fn open_store(opts: &opts::DaemonOpts) -> Result<(StoreHandle, bool)> {
     let path = store_path(opts)?;
     let passphrase = opts
         .passphrase
         .clone()
         .or_else(|| std::env::var("CLING_PASSPHRASE").ok());
-    let store = cling_store::Store::open(&path, passphrase.as_deref())
-        .with_context(|| format!("opening store at {path}"))?;
-    Ok(Arc::new(store))
+
+    // If a passphrase was supplied, open encrypted (creates an encrypted DB on
+    // first run, or decrypts an existing one).
+    if let Some(pw) = &passphrase {
+        let store = cling_store::Store::open(&path, Some(pw))
+            .with_context(|| format!("opening encrypted store at {path}"))?;
+        return Ok((StoreHandle::opened(store, Some(path)), false));
+    }
+
+    // Otherwise: try opening unencrypted. If the existing DB is encrypted, the
+    // open will fail to decrypt → start locked and await a GUI unlock.
+    match cling_store::Store::open(&path, None) {
+        Ok(store) => Ok((StoreHandle::opened(store, Some(path)), false)),
+        Err(cling_core::StoreError::Locked) | Err(cling_core::StoreError::Db(_)) => {
+            tracing::info!(
+                "history DB is encrypted (or unreadable); starting locked, awaiting unlock"
+            );
+            Ok((StoreHandle::pending(path), true))
+        }
+    }
 }
 
 fn store_path(opts: &opts::DaemonOpts) -> Result<String> {
@@ -131,10 +164,13 @@ async fn serve_dbus(
     provider: Arc<dyn ClipboardProvider>,
     unlock: Arc<dyn UnlockRequest>,
     auto_paste: Option<Arc<dyn Fn() + Send + Sync>>,
+    started_locked: bool,
 ) -> Result<()> {
     let conn = zbus::ConnectionBuilder::session()?.build().await?;
     let service = ClipboardManagerService::new(store, provider, unlock, conn.clone())
-        .with_auto_paste(auto_paste);
+        .with_auto_paste(auto_paste)
+        .with_initial_locked(started_locked)
+        .await;
     conn.object_server()
         .at(
             zvariant::ObjectPath::try_from(cling_dbus_iface::OBJECT_PATH).unwrap(),
@@ -144,7 +180,11 @@ async fn serve_dbus(
     conn.request_name(cling_dbus_iface::BUS_NAME)
         .await
         .map_err(|e| anyhow::anyhow!("request_name: {e}"))?;
-    tracing::info!("D-Bus name {} acquired", cling_dbus_iface::BUS_NAME);
+    tracing::info!(
+        started_locked,
+        "D-Bus name {} acquired",
+        cling_dbus_iface::BUS_NAME
+    );
     std::future::pending::<()>().await;
     Ok(())
 }
