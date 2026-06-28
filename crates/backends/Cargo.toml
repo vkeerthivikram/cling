@@ -1,0 +1,34 @@
+[package]
+name = "cling-backends"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+cling-common = { workspace = true }
+cling-core = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+
+# X11 backend (pure-Rust over the system xcb lib). Requires xfixes + xtest.
+x11rb = { workspace = true, optional = true, features = ["xfixes", "xtest"] }
+
+# Wayland backends.
+wayland-client = { version = "0.31", optional = true }
+
+[features]
+default = []
+x11 = ["dep:x11rb"]
+wayland = ["dep:wayland-client"]
+
+[dev-dependencies]
+cling-store = { workspace = true }
+
+[lib]
+path = "src/lib.rs"
